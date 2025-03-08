@@ -1,4 +1,7 @@
 # CHIP-8 emulator
+
+I'm getting most of my information from [CHIP-8 Wikipedia article](https://en.wikipedia.org/wiki/CHIP-8)
+
 # Opcode table
 ## Symbols
 * NNN: address
