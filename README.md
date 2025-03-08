@@ -49,6 +49,5 @@
 | FX65   | MEM     | reg_load(Vx, &I)    | Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified. |
 
 
-### Author
-Dalton Kajander
+### Author: Dalton Kajander
 ### POC: daltonkajander@yahoo.com
