@@ -1,5 +1,4 @@
-# chip-8
- 
+# CHIP-8 emulator
 # Opcode table
 ## Symbols
 * NNN: address
@@ -48,3 +47,8 @@
 | FX33   | BCD     | ```set_BCD(Vx) *(I+0) = BCD(3); *(I+1) = BCD(2); *(I+2) = BCD(1);```           | Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.                                                                                                                                                                                                  |
 | FX55   | MEM     | reg_dump(Vx, &I)    | Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.           |
 | FX65   | MEM     | reg_load(Vx, &I)    | Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified. |
+
+
+### Author
+Dalton Kajander
+### POC: daltonkajander@yahoo.com
