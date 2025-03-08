@@ -22,7 +22,7 @@
 | 6XNN   | Const   | Vx = NN             | Sets VX to NN                                                                                                                                                                |
 | 7XNN   | Const   | Vx += NN            | Adds NN to VX (carry flag not changed)                                                                                                                                       |
 | 8XY0   | Assig   | Vx = Vy             | Sets VX to the value of VY.                                                                                                                                                  |
-| 8XY1   | BitOp   | Vx |= Vy            | Sets VX to VX or VY. (bitwise OR operation).                                                                                                                                 |
+| 8XY1   | BitOp   | Vx \|= Vy            | Sets VX to VX or VY. (bitwise OR operation).                                                                                                                                 |
 | 8XY2   | BitOp   | Vx &= Vy            | Sets VX to VX and VY. (bitwise AND operation).                                                                                                                               |
 | 8XY3   | BitOp   | Vx ^= Vy            | Sets VX to VX xor VY.                                                                                                                                                        |
 | 8XY4   | Math    | Vx += Vy            | Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not.                                                                                          |
