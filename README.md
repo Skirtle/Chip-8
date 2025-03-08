@@ -2,8 +2,14 @@
 
 I'm getting most of my information from [CHIP-8 Wikipedia article](https://en.wikipedia.org/wiki/CHIP-8)
 
-# Opcode table
-## Symbols
+## Virtual machine description
+### Memory
+4096 bytes of memory, but the interpreter allocated the first 512. Uppermost 256 bytes are reserved for display refresh and 96 bytes below that are reserved for call stack, iunternal use, and other variables. Modern implementations do not need to avoid using the first 512 bytes, but in my case, I will keep those reserved.
+### Registers
+16 8-bit registers, from V0 to VF,
+
+## Opcode table
+### Symbols
 * NNN: address
 * NN: 8-bit constant
 * N: 4-bit constant
@@ -12,7 +18,7 @@ I'm getting most of my information from [CHIP-8 Wikipedia article](https://en.wi
 * I: 12-bit register, for memory address
 * VN: One of the 16 avilable variables, from 0 to F
 
-## Table
+### Table
 | OPcode |  Type   | C Psudocode         | Explanation                                                                                                                                                                  |
 | :----: | :-----: | :-----------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | 0NNN   | Call    |                     | Calls machine code routine at address NNN                                                                                                                                    |
@@ -52,5 +58,5 @@ I'm getting most of my information from [CHIP-8 Wikipedia article](https://en.wi
 | FX65   | MEM     | reg_load(Vx, &I)    | Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified. |
 
 
-### Author: Dalton Kajander
-### POC: daltonkajander@yahoo.com
+##### Author: Dalton Kajander
+##### POC: daltonkajander@yahoo.com
