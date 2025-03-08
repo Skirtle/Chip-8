@@ -22,7 +22,7 @@
 | 6XNN   | Const   | Vx = NN             | Sets VX to NN                                                                                                                                                                |
 | 7XNN   | Const   | Vx += NN            | Adds NN to VX (carry flag not changed)                                                                                                                                       |
 | 8XY0   | Assig   | Vx = Vy             | Sets VX to the value of VY.                                                                                                                                                  |
-| 8XY1   | BitOp   | Vx \|= Vy            | Sets VX to VX or VY. (bitwise OR operation).                                                                                                                                 |
+| 8XY1   | BitOp   | Vx \|= Vy           | Sets VX to VX or VY. (bitwise OR operation).                                                                                                                                 |
 | 8XY2   | BitOp   | Vx &= Vy            | Sets VX to VX and VY. (bitwise AND operation).                                                                                                                               |
 | 8XY3   | BitOp   | Vx ^= Vy            | Sets VX to VX xor VY.                                                                                                                                                        |
 | 8XY4   | Math    | Vx += Vy            | Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not.                                                                                          |
@@ -43,6 +43,6 @@
 | FX18   | Sound   | sound_timer(Vx)     | Sets the sound timer to VX.                                                                                                                                                  |
 | FX1E   | MEM     | I += Vx             | Adds VX to I. VF is not affected.                                                                                                                                            |
 | FX29   | MEM     | I = sprite_addr[Vx] | Sets I to the location of the sprite for the character in VX(only consider the lowest nibble). Characters 0-F (in hexadecimal) are represented by a 4x5 font.                |
-| FX33   | BCD     | See below           | Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.|
+| FX33   | BCD     | ```set_BCD(Vx) *(I+0) = BCD(3); *(I+1) = BCD(2); *(I+2) = BCD(1);```           | Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.|
 | FX55   | MEM     | reg_dump(Vx, &I)    | Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.           |
 | FX65   | MEM     | reg_load(Vx, &I)    | Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified. |
