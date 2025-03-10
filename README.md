@@ -6,9 +6,9 @@ CHIP-8 is an interpreted programming language created by Joseph Weisbacker for a
 
 ## Virtual machine description
 ### Memory
-4096 bytes of memory, but the interpreter allocated the first 512. Uppermost 256 bytes are reserved for display refresh and 96 bytes below that are reserved for call stack, iunternal use, and other variables. Modern implementations do not need to avoid using the first 512 bytes
+4096 bytes of memory, but the interpreter allocated the first 512. Uppermost 256 bytes are reserved for display refresh and 96 bytes below that are reserved for call stack, iunternal use, and other variables. Modern implementations do not need to avoid using the first 512 bytes. We will keep true to the original by leaving it blank, except for font data.
 ### Registers
-16 8-bit registers, from V0 to VF, VF doubles as a flag for certain instructions, so try to avoid using it (the carry flag for addition, the 'no borrow' flag for subtraction, and set upon pixel collision for draw)
+16 8-bit registers, from V0 to VF, VF doubles as a flag for certain instructions, so try to avoid using it (the carry flag for addition, the 'no borrow' flag for subtraction, and set upon pixel collision for draw). The address register, I, is 12 bits. 
 ### Stack
 Stores return addressess when subroutines are called. Original version allocated 48 bytes for up to 12 levels of nesting
 ### Timers
@@ -68,6 +68,9 @@ The display is monochrome 64x32 pixels. Graphics drawn via sprites (8 pixels wid
 | FX33 | BCD | ```set_BCD(Vx) *(I+0) = BCD(3); *(I+1) = BCD(2); *(I+2) = BCD(1);``` | Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2. |
 | FX55 | MEM | reg_dump(Vx, &I) | Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified. |
 | FX65 | MEM | reg_load(Vx, &I) | Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified. |
+
+
+## Font data
 
 
 ##### Author: Dalton Kajander
