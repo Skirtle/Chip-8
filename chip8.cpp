@@ -13,6 +13,22 @@ Source of information: https://en.wikipedia.org/wiki/CHIP-8#Memory, https://tobi
 #define DISPLAY_WIDTH 64
 #define DISPLAY_HEIGHT 32
 
+class Character {
+public:
+	uint8_t *pixels = nullptr;
+	char character;
+	Character(char c, uint8_t p1, uint8_t p2, uint8_t p3, uint8_t p4, uint8_t p5) {
+		character = c;
+		pixels = (uint8_t*) malloc(sizeof(uint8_t) * 4);
+		if (!pixels) {return;}
+		pixels[0] = p1;
+		pixels[1] = p2;
+		pixels[2] = p3;
+		pixels[3] = p4;
+		pixels[4] = p5;
+	}
+};
+
 class Register {
 public:
 	uint8_t v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, va, vb, vc, vd, ve, vf;
@@ -70,8 +86,39 @@ private:
 
 };
 
-void load_font_data(uint8_t *memory) {
-	std::cout << "Loading font data into memory\n";
+void load_font_sprites(uint8_t *memory) {
+    std::cout << "Loading font data into memory\n";
+
+    Character sprite_array[16] = {
+        Character('0', 0xF0, 0x90, 0x90, 0x90, 0xF0),
+        Character('1', 0x20, 0x60, 0x20, 0x20, 0x70),
+        Character('2', 0xF0, 0x10, 0xF0, 0x80, 0xF0),
+        Character('3', 0xF0, 0x10, 0xF0, 0x10, 0xF0),
+        Character('4', 0x90, 0x90, 0xF0, 0x10, 0x10),
+        Character('5', 0xF0, 0x80, 0xF0, 0x10, 0xF0),
+        Character('6', 0xF0, 0x80, 0xF0, 0x90, 0xF0),
+        Character('7', 0xF0, 0x10, 0x20, 0x40, 0x40),
+        Character('8', 0xF0, 0x90, 0xF0, 0x90, 0xF0),
+        Character('9', 0xF0, 0x90, 0xF0, 0x10, 0xF0),
+        Character('A', 0xF0, 0x90, 0xF0, 0x90, 0x90),
+        Character('B', 0xE0, 0x90, 0xE0, 0x90, 0xE0),
+        Character('C', 0xF0, 0x80, 0x80, 0x80, 0xF0),
+        Character('D', 0xE0, 0x90, 0x90, 0x90, 0xE0),
+        Character('E', 0xF0, 0x80, 0xF0, 0x80, 0xF0),
+        Character('F', 0xF0, 0x80, 0xF0, 0x80, 0x80)
+    };
+    uint16_t starting_memory = 0x050;
+
+    for (int i = 0; i < 16; i++) {
+        std::cout << "\t" << sprite_array[i].character << ":";
+        for (int j = 0; j < 5; j++) {
+            std::cout << " 0x" << std::uppercase << std::hex << +sprite_array[i].pixels[j];
+            memory[starting_memory + (5 * i) + j] = sprite_array[i].pixels[j];
+        }
+        std::cout << "\n";
+    }
+
+	std::cout << "Loaded font sprites\n";
 }
 
 int main() {
@@ -114,14 +161,16 @@ int main() {
 	Stack stack = Stack();
 	std::cout << "Set " << stack.get_max_address_count() * sizeof(uint16_t) << " bytes for the stack\n";
 
-	
-
 	// Index register (memory addreses)
 	uint16_t I = 0x00;
 	std::cout << "Set 2 bytes for variable registers\n";
 
 	// Program counter
 	int PC = -1;
+
+	// Start loading data
+	load_font_sprites(memory_buffer);
+
 	
 
 	free(memory_buffer);
