@@ -358,13 +358,8 @@ int main() {
 	// Stack: RCA 1802 version allocates 48 bytes for 12 levels of nesting
 	Stack stack = Stack();
 	if (DEBUG) std::cout << "Set " << stack.get_max_address_count() * sizeof(uint16_t) << " bytes for the stack\n";
-
-	// Index register (memory addreses)
-	uint16_t I = 0x200;
+	
 	if (DEBUG) std::cout << "Set 2 bytes for variable registers\n";
-
-	// Program counter
-	int PC = 0;
 
 	// Start loading data
 	load_font_sprites(memory_buffer);
@@ -379,6 +374,10 @@ int main() {
 
 	
 	bool halt_flag = false;
+	int PC = 0;
+	uint16_t I = 0x200; // Index register, Starting at 0x200, the first "available" memory space
+
+
 	clear_terminal();
 	while (!halt_flag) {
 		// Fetch
@@ -399,7 +398,7 @@ int main() {
 			case 0x0:
 				if (instruction == 0x00E0) { clear_screen(display_buffer); } // Clear the display
 				else if (instruction == 0x00EE) { PC = stack.pop(); } // Return
-				//else if (instruction == 0x0000) { halt_flag = true; }
+				else if (instruction == 0x0000) { halt_flag = true; }
 				break;
 			case 0x1:
 				// 1NNN, jump to address NNN
