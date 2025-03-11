@@ -30,16 +30,15 @@ public:
 
 	Stack(int max_address_count) {
 		set_max_address_count(max_address_count);
-		this->stack_ptr = (uint16_t*) malloc(sizeof(uint16_t) * max_address_count);
-		if (!this->stack_ptr) {
-			return;
-		}
+		if (this->max_address_count != 0) this->stack = (uint16_t*) malloc(sizeof(uint16_t) * max_address_count);
+		if (!this->stack) { Stack(0); }
+		for (int i = 0; i < this->max_address_count; i++) { this->stack[i] = 0; }
 	}
 
 	~Stack() {
-		if (this->stack_ptr != nullptr) {
-			free(this->stack_ptr);
-			this->stack_ptr = nullptr;
+		if (this->stack != nullptr) {
+			free(this->stack);
+			this->stack = nullptr;
 		}
 	}
 
@@ -49,16 +48,16 @@ public:
 	uint16_t pop() {
 		if (this->is_empty()) return (uint16_t) NULL;
 		this->stack_pointer--;
-		return this->stack_ptr[this->stack_pointer + 1];
+		return this->stack[this->stack_pointer + 1];
 	}
 	uint16_t peak() {
 		if (this->is_empty()) return (uint16_t) NULL;
-		return this->stack_ptr[this->stack_pointer];
+		return this->stack[this->stack_pointer];
 	}
 	bool push(uint16_t value) {
 		if (this->is_full()) return false;
 		this->stack_pointer++;
-		this->stack_ptr[this->stack_pointer] = value;
+		this->stack[this->stack_pointer] = value;
 		return true;
 	}
 	bool is_empty() { return this->stack_pointer < 0; }
@@ -66,10 +65,14 @@ public:
 
 	int max_address_count;
 private:
-	uint16_t *stack_ptr = nullptr;
+	uint16_t *stack = nullptr;
 	int stack_pointer = -1;
 
 };
+
+void load_font_data(uint8_t *memory) {
+	std::cout << "Loading font data into memory\n";
+}
 
 int main() {
 	// Memory: 4096 bytes
@@ -78,7 +81,7 @@ int main() {
 		std::cout << "Failed to reserved " << MAX_MEMORY_BYTES << " bytes for memory. Exitting\n";
 		return -1;
 	}
-	std::cout << "Reserved " << MAX_MEMORY_BYTES << " bytes for memory\n";
+	std::cout << "Set " << MAX_MEMORY_BYTES << " bytes for memory\n";
 
 	// Display memory
 	bool **display_buffer = (bool**) malloc(sizeof(bool*) * DISPLAY_HEIGHT);
@@ -101,21 +104,21 @@ int main() {
 			return -1;
 		}
 	}
-	std::cout << "Reserved " << DISPLAY_WIDTH << "x" << DISPLAY_HEIGHT << " display buffer\n";
+	std::cout << "Set " << DISPLAY_WIDTH << "x" << DISPLAY_HEIGHT << " display buffer\n";
 
 	// Registers: 16 8-bit registers, V0-VF
 	Register reg16 = Register();
-	std::cout << "Reserved " << MAX_REGISTERS << " bytes for variable registers\n";
+	std::cout << "Set " << MAX_REGISTERS << " bytes for variable registers\n";
 	
 	// Stack: RCA 1802 version allocates 48 bytes for 12 levels of nesting
 	Stack stack = Stack();
-	std::cout << "Reserved " << stack.get_max_address_count() * sizeof(uint16_t) << " bytes for the stack\n";
+	std::cout << "Set " << stack.get_max_address_count() * sizeof(uint16_t) << " bytes for the stack\n";
 
 	
 
 	// Index register (memory addreses)
 	uint16_t I = 0x00;
-	std::cout << "Reserved 2 bytes for variable registers\n";
+	std::cout << "Set 2 bytes for variable registers\n";
 
 	// Program counter
 	int PC = -1;
