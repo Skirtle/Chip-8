@@ -273,7 +273,7 @@ void print_display(bool** display_buffer) {
     }
 }
 
-void draw(bool **display_buffer, uint8_t *memory_buffer, Register reg, uint8_t vx, uint8_t vy, uint8_t n, uint16_t I) {
+void draw(bool **display_buffer, uint8_t *memory_buffer, Register *reg, uint8_t vx, uint8_t vy, uint8_t n, uint16_t I) {
     for (int row = 0; row < n; ++row) {
         uint8_t sprite_row = memory_buffer[I + row];
 
@@ -285,7 +285,7 @@ void draw(bool **display_buffer, uint8_t *memory_buffer, Register reg, uint8_t v
 
             if (pixel) { 
 				display_buffer[y][x] ^= true; 
-				if (display_buffer[y][x]) reg.set_register(0xF, 0x0001);
+				if (display_buffer[y][x]) reg->set_register(0xF, 0x0001);
 			}
         }
     }
@@ -388,13 +388,15 @@ int main() {
 		PC += 2;
 
 		// Decode
-		uint16_t nibble1 = (instruction & 0xF000) >> 12;
-		uint16_t nibble2 = (instruction & 0x0F00) >> 8;
-		uint16_t nibble3 = (instruction & 0x00F0) >> 4;
-		uint16_t nibble4 = (instruction & 0x000F);
+		uint16_t NNN = instruction & 0x0FFF;
+		uint16_t NN = instruction & 0x00FF;
+		uint16_t N = instruction & 0x000F;
+		uint16_t X = (instruction & 0x0F00) >> 8;
+		uint16_t Y = (instruction & 0x00F0) >> 4;
+
 		int reg = 0;
 		int value = 0;
-		switch (nibble1) {
+		switch ((instruction & 0xF000) >> 12) {
 			case 0x0:
 				if (instruction == 0x00E0) { clear_screen(display_buffer); } // Clear the display
 				else if (instruction == 0x00EE) { PC = stack.pop(); } // Return
@@ -402,61 +404,85 @@ int main() {
 				break;
 			case 0x1:
 				// 1NNN, jump to address NNN
-				PC = instruction & 0x0FFF;
+				PC = NNN;
 				if (DEBUG) std::cout << "\tJumping to address " << +PC << "\n";
 				break;
 			case 0x2:
 				// 2NNN, call subroutine at address NNN and push current PC to stack
 				stack.push(PC);
-				PC = instruction & 0x0FFF;
+				PC = NNN;
 				break;
 			case 0x3:
 				// 3XNN, if vx == NN: skip next instruction
-				if (reg16.get_register(nibble2) == (0x00FF && instruction)) PC += 2;
+				if (reg16.get_register(X) == (0x00FF & instruction)) PC += 2;
 				break;
 			case 0x4:
 				// 4XNN, if vx != NN: skip next instruction
-				if (reg16.get_register(nibble2) != (0x00FF && instruction)) PC += 2;
+				if (reg16.get_register(X) != (0x00FF & instruction)) PC += 2;
 				break;
 			case 0x5:
 				// 5XY0, if vx != NN: skip next instruction
-				if (reg16.get_register(nibble2) == reg16.get_register(nibble3)) PC += 2;
+				if (reg16.get_register(X) == reg16.get_register(Y)) PC += 2;
 				break;
 			case 0x6:
 				// 6XNN, set VX to NN
 				reg = instruction & 0xF00;
-				value = instruction & 0x00FF;
+				value = NN;
 				reg16.set_register(reg, value);
 				if (DEBUG) std::cout << "\tSetting V" << reg << " to " << value << "\n";
 				break;
 			case 0x7:
 				reg = instruction & 0xF00;
-				value = instruction & 0x00FF;
+				value = NN;
 				reg16.set_register(reg, value + reg16.get_register(reg));
 				if (DEBUG) std::cout << "\tAdding " << value << " to V" << reg << "\n";
 				break;
 			case 0x8:
+				if (N == 0) { reg16.set_register(X, reg16.get_register(Y)); } //  VX = VY
+				else if (N == 0x1) { reg16.set_register(X, reg16.get_register(Y) | reg16.get_register(X)); } // VX |= VY, OR
+				else if (N == 0x2) { reg16.set_register(X, reg16.get_register(Y) & reg16.get_register(X)); } // VX &= VY, AND
+				else if (N == 0x3) { reg16.set_register(X, reg16.get_register(Y) ^ reg16.get_register(X)); } // VX ^= VY, XOR
+				else if (N == 0x4) { // VX += VY. VF = 1 if overflow
+					reg16.set_register(0xF, (int) reg16.get_register(X) + (int) reg16.get_register(Y) > 255);
+					reg16.set_register(X, reg16.get_register(X) + reg16.get_register(Y));
+				} 
+				else if (N == 0x5) { // VX -= VY. VF = 1 if VX >= VY
+					reg16.set_register(0xF, reg16.get_register(X) >= reg16.get_register(Y));
+					reg16.set_register(X, reg16.get_register(X) - reg16.get_register(Y)); 
+				} 
+				else if (N == 0x6) { // VX >>= 1. VF = LSB of VX prior to shift
+					reg16.set_register(0xF, 0x0001 & reg16.get_register(X));
+					reg16.set_register(X, reg16.get_register(X) >> 1);
+				} 
+				else if (N == 0x7) { // VX = VY - VX. VF = 1 if VY >= VX
+					reg16.set_register(0xF, reg16.get_register(Y) >= reg16.get_register(X));
+					reg16.set_register(X,  reg16.get_register(Y) - reg16.get_register(X));
+				} 
+				else if (N == 0xE) { // VX <<= 1. VF = MSB of VX prior to shift
+					reg16.set_register(0xF, 0x8000 & reg16.get_register(X));
+					reg16.set_register(X, reg16.get_register(X) << 1);
+				} 
 				break;
 			case 0x9:
 				// 9XY0, skip next if VX != VY
-				if (reg16.get_register(nibble2) != reg16.get_register(nibble3)) PC += 2;
+				if (reg16.get_register(X) != reg16.get_register(Y)) PC += 2;
 				break;
 			case 0xA:
-				I = instruction & 0x0FFF;
+				I = NNN;
 				if (DEBUG) std::cout << "\tSetting I to " << +I << "\n";
 				break;
 			case 0xB:
 				// BNNN, jump to NNN + V0
-				PC = (instruction & 0x0FFF) + reg16.get_register(0);
+				PC = (NNN) + reg16.get_register(0);
 				break;
 			case 0xC:
 				// CXNN, set VX to the bitwise AND of a random number (0x00 - 0xFF) and NN
-				reg16.set_register(nibble2, distrib(gen) && 0x00FF && instruction);
+				reg16.set_register(X, distrib(gen) & 0x00FF & instruction);
 				break;
 			case 0xD:
 				// DXYN, draw at X,Y with height of N
-				if (DEBUG) std::cout << "Drawing to display at " << +reg16.get_register(nibble2) << ", " << +reg16.get_register(nibble3) << "\n";
-				draw(display_buffer, memory_buffer, reg16, nibble2, nibble3, nibble4, I);
+				if (DEBUG) std::cout << "\tDrawing to display at " << +reg16.get_register(X) << ", " << +reg16.get_register(Y) << "\n";
+				draw(display_buffer, memory_buffer, &reg16, reg16.get_register(X), reg16.get_register(Y), N, I);
 				clear_terminal();
 				print_display(display_buffer);
 				break;

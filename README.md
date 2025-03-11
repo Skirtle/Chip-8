@@ -43,15 +43,15 @@ The display is monochrome 64x32 pixels. Graphics drawn via sprites (8 pixels wid
 | 5XY0 | Cond | if (Vx == Vy) | Skips the nxet instruction if VX equals VY | Yes |
 | 6XNN | Const | Vx = NN | Sets VX to NN | Yes |
 | 7XNN | Const | Vx += NN | Adds NN to VX (carry flag not changed) | Yes |
-| 8XY0 | Assig | Vx = Vy | Sets VX to the value of VY. | No |
-| 8XY1 | BitOp | Vx \|= Vy | Sets VX to VX or VY. (bitwise OR operation). | No |
-| 8XY2 | BitOp | Vx &= Vy | Sets VX to VX and VY. (bitwise AND operation). | No |
-| 8XY3 | BitOp | Vx ^= Vy | Sets VX to VX xor VY. | No |
-| 8XY4 | Math | Vx += Vy | Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not. | No |
-| 8XY5 | Math | Vx -= Vy | VY is subtracted from VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VX >= VY and 0 if not). | No |
-| 8XY6 | BitOp | Vx >>= 1 | Shifts VX to the right by 1, then stores the least significant bit of VX prior to the shift into VF. | No |
-| 8XY7 | Math | Vx = Vy - Vx | Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX). | No |
-| 8XYE | BitOp | Vx <<= 1 | Shifts VX to the left by 1, then sets VF to 1 if the most significant bit of VX prior to that shift was set, or to 0 if it was unset. | No |
+| 8XY0 | Assig | Vx = Vy | Sets VX to the value of VY. | Yes |
+| 8XY1 | BitOp | Vx \|= Vy | Sets VX to VX or VY. (bitwise OR operation). | Yes |
+| 8XY2 | BitOp | Vx &= Vy | Sets VX to VX and VY. (bitwise AND operation). | Yes |
+| 8XY3 | BitOp | Vx ^= Vy | Sets VX to VX xor VY. | Yes |
+| 8XY4 | Math | Vx += Vy | Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not. | Yes |
+| 8XY5 | Math | Vx -= Vy | VY is subtracted from VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VX >= VY and 0 if not). | Yes |
+| 8XY6 | BitOp | Vx >>= 1 | Shifts VX to the right by 1, then stores the least significant bit of VX prior to the shift into VF. | Yes |
+| 8XY7 | Math | Vx = Vy - Vx | Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX). | Yes |
+| 8XYE | BitOp | Vx <<= 1 | Shifts VX to the left by 1, then sets VF to 1 if the most significant bit of VX prior to that shift was set, or to 0 if it was unset. | Yes |
 | 9XY0 | Cond | if (Vx != Vy) | Skips the next instruction if VX does not equal VY. (Usually the next instruction is a jump to skip a code block). | Yes |
 | ANNN | MEM | I = NNN | Sets I to the address NNN. | Yes |
 | BNNN | Flow | PC = V0 + NNN | Jumps to the address NNN plus V0. | Yes |
