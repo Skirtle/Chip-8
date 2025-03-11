@@ -394,8 +394,7 @@ int main() {
 		uint16_t X = (instruction & 0x0F00) >> 8;
 		uint16_t Y = (instruction & 0x00F0) >> 4;
 
-		int reg = 0;
-		int value = 0;
+		bool key_pressed = false;
 		switch ((instruction & 0xF000) >> 12) {
 			case 0x0:
 				if (instruction == 0x00E0) { clear_screen(display_buffer); } // Clear the display
@@ -426,18 +425,14 @@ int main() {
 				break;
 			case 0x6:
 				// 6XNN, set VX to NN
-				reg = instruction & 0xF00;
-				value = NN;
-				reg16.set_register(reg, value);
-				if (DEBUG) std::cout << "\tSetting V" << reg << " to " << value << "\n";
+				reg16.set_register(X, NN);
+				if (DEBUG) std::cout << "\tSetting V" << X << " to " << NN << "\n";
 				break;
 			case 0x7:
-				reg = instruction & 0xF00;
-				value = NN;
-				reg16.set_register(reg, value + reg16.get_register(reg));
-				if (DEBUG) std::cout << "\tAdding " << value << " to V" << reg << "\n";
+				reg16.set_register(X, NN + reg16.get_register(X));
+				if (DEBUG) std::cout << "\tAdding " << NN << " to V" << X << "\n";
 				break;
-			case 0x8:
+			case 0x8: // Math
 				if (N == 0) { reg16.set_register(X, reg16.get_register(Y)); } //  VX = VY
 				else if (N == 0x1) { reg16.set_register(X, reg16.get_register(Y) | reg16.get_register(X)); } // VX |= VY, OR
 				else if (N == 0x2) { reg16.set_register(X, reg16.get_register(Y) & reg16.get_register(X)); } // VX &= VY, AND
@@ -486,7 +481,9 @@ int main() {
 				clear_terminal();
 				print_display(display_buffer);
 				break;
-			case 0xE:
+			case 0xE: // Keys
+				if (NN == 0x9E && ((reg16.get_register(X) & 0x000F) == key_pressed)) PC += 2; // Skips the next instruction if the key stored in VX(only consider the lowest nibble) is pressed
+				else if (NN == 0xA1 && ((reg16.get_register(X) & 0x000F) != key_pressed)) PC += 2; // Skips the next instruction if the key stored in VX(only consider the lowest nibble) is not pressed
 				break;
 			case 0xF:
 				break;
