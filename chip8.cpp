@@ -10,6 +10,7 @@ Source of information: https://en.wikipedia.org/wiki/CHIP-8#Memory, https://tobi
 #include <vector>
 #include <chrono>
 #include <thread>
+#include <random>
 
 #define MAX_MEMORY_BYTES 4096
 #define MAX_REGISTERS 16
@@ -20,8 +21,9 @@ Source of information: https://en.wikipedia.org/wiki/CHIP-8#Memory, https://tobi
 #define BLACK " "
 #define WHITE "■"
 #define MAX_FILE_SIZE 3896
-#define DEBUG 1
+#define DEBUG 0
 #define NANOSECONDS_PER_FRAME 1666666
+#define SPRITE_MEMORY_LOCATION (uint16_t) 0x050
 
 class Character {
 public:
@@ -206,7 +208,7 @@ private:
 };
 
 void load_font_sprites(uint8_t *memory) {
-    std::cout << "Loading font data into memory\n";
+    if (DEBUG) std::cout << "Loading font data into memory\n";
 
     Character sprite_array[16] = {
         Character('0', 0xF0, 0x90, 0x90, 0x90, 0xF0),
@@ -226,18 +228,18 @@ void load_font_sprites(uint8_t *memory) {
         Character('E', 0xF0, 0x80, 0xF0, 0x80, 0xF0),
         Character('F', 0xF0, 0x80, 0xF0, 0x80, 0x80)
     };
-    uint16_t starting_memory = 0x050;
+    uint16_t starting_memory = SPRITE_MEMORY_LOCATION;
 
     for (int i = 0; i < 16; i++) {
-        std::cout << "\t" << sprite_array[i].character << ":";
+        if (DEBUG) std::cout << "\t" << sprite_array[i].character << ":";
         for (int j = 0; j < 5; j++) {
-            std::cout << " 0x" << std::uppercase << std::hex << +sprite_array[i].pixels[j];
+            if (DEBUG) std::cout << " 0x" << std::uppercase << std::hex << +sprite_array[i].pixels[j];
             memory[starting_memory + (5 * i) + j] = sprite_array[i].pixels[j];
         }
-        std::cout << "\n";
+        if (DEBUG) std::cout << "\n";
     }
 
-	std::cout << "Loaded font sprites\n";
+	if (DEBUG) std::cout << "Loaded font sprites\n";
 }
 
 void set_8bit_memory_at_address(uint8_t* mem_buffer, int address, uint8_t value) {
@@ -271,7 +273,7 @@ void print_display(bool** display_buffer) {
     }
 }
 
-void draw(bool **display_buffer, uint8_t *memory_buffer, uint8_t vx, uint8_t vy, uint8_t n, uint16_t I) {
+void draw(bool **display_buffer, uint8_t *memory_buffer, Register reg, uint8_t vx, uint8_t vy, uint8_t n, uint16_t I) {
     for (int row = 0; row < n; ++row) {
         uint8_t sprite_row = memory_buffer[I + row];
 
@@ -281,7 +283,10 @@ void draw(bool **display_buffer, uint8_t *memory_buffer, uint8_t vx, uint8_t vy,
             int x = (vx + col) % DISPLAY_WIDTH;
             int y = (vy + row) % DISPLAY_HEIGHT;
 
-            if (pixel) { display_buffer[y][x] ^= true; }
+            if (pixel) { 
+				display_buffer[y][x] ^= true; 
+				if (display_buffer[y][x]) reg.set_register(0xF, 0x0001);
+			}
         }
     }
 }
@@ -293,19 +298,17 @@ void load_rom(std::string filename, uint8_t *memory) {
 		return;
 	}
 
-	size_t index = 0;
+	int index = 0;
     uint8_t byte;
 
     while (file.read(reinterpret_cast<char*>(&byte), 1)) {  // Read 1 byte at a time
         set_8bit_memory_at_address(memory, index, byte);
 		index++;
 
-        if (index >= MAX_FILE_SIZE) {
-            break;
-        }
-    }
+        if (index >= MAX_FILE_SIZE) break;
+	}
 
-    std::cout << "Finished reading the file.\n";
+    if (DEBUG)  std::cout << "Finished reading the file.\n";
 
     file.close();
 
@@ -369,6 +372,11 @@ int main() {
 	// Load ROM
 	load_rom("2-ibm-logo.ch8", memory_buffer);
 
+	// Random number between 0 and 255
+	std::random_device rd;  // a seed source for the random number engine
+    std::mt19937 gen(rd()); // mersenne_twister_engine seeded with rd()
+    std::uniform_int_distribution<> distrib(0x00, 0xFF);
+
 	
 	bool halt_flag = false;
 	clear_terminal();
@@ -388,27 +396,34 @@ int main() {
 		int value = 0;
 		switch (nibble1) {
 			case 0x0:
-				if (instruction == 0x00E0) { clear_screen(display_buffer); } 
-				else if (instruction == 0x00EE) {
-					PC = stack.pop();
-				}
+				if (instruction == 0x00E0) { clear_screen(display_buffer); } // Clear the display
+				else if (instruction == 0x00EE) { PC = stack.pop(); } // Return
 				//else if (instruction == 0x0000) { halt_flag = true; }
 				break;
 			case 0x1:
+				// 1NNN, jump to address NNN
 				PC = instruction & 0x0FFF;
 				if (DEBUG) std::cout << "\tJumping to address " << +PC << "\n";
 				break;
 			case 0x2:
+				// 2NNN, call subroutine at address NNN and push current PC to stack
 				stack.push(PC);
 				PC = instruction & 0x0FFF;
 				break;
 			case 0x3:
+				// 3XNN, if vx == NN: skip next instruction
+				if (reg16.get_register(nibble2) == (0x00FF && instruction)) PC += 2;
 				break;
 			case 0x4:
+				// 4XNN, if vx != NN: skip next instruction
+				if (reg16.get_register(nibble2) != (0x00FF && instruction)) PC += 2;
 				break;
 			case 0x5:
+				// 5XY0, if vx != NN: skip next instruction
+				if (reg16.get_register(nibble2) == reg16.get_register(nibble3)) PC += 2;
 				break;
 			case 0x6:
+				// 6XNN, set VX to NN
 				reg = instruction & 0xF00;
 				value = instruction & 0x00FF;
 				reg16.set_register(reg, value);
@@ -423,18 +438,25 @@ int main() {
 			case 0x8:
 				break;
 			case 0x9:
+				// 9XY0, skip next if VX != VY
+				if (reg16.get_register(nibble2) != reg16.get_register(nibble3)) PC += 2;
 				break;
 			case 0xA:
 				I = instruction & 0x0FFF;
 				if (DEBUG) std::cout << "\tSetting I to " << +I << "\n";
 				break;
 			case 0xB:
+				// BNNN, jump to NNN + V0
+				PC = (instruction & 0x0FFF) + reg16.get_register(0);
 				break;
 			case 0xC:
+				// CXNN, set VX to the bitwise AND of a random number (0x00 - 0xFF) and NN
+				reg16.set_register(nibble2, distrib(gen) && 0x00FF && instruction);
 				break;
 			case 0xD:
-				if (DEBUG) std::cout << "Drawing to display at " << +reg16.get_register((instruction & 0x0F00) >> 8) << ", " << +reg16.get_register((instruction & 0x00F0) >> 4) << "\n";
-				draw(display_buffer, memory_buffer, reg16.get_register((instruction & 0x0F00) >> 8), reg16.get_register((instruction & 0x00F0) >> 4), (instruction & 0x00F0), I);
+				// DXYN, draw at X,Y with height of N
+				if (DEBUG) std::cout << "Drawing to display at " << +reg16.get_register(nibble2) << ", " << +reg16.get_register(nibble3) << "\n";
+				draw(display_buffer, memory_buffer, reg16, nibble2, nibble3, nibble4, I);
 				clear_terminal();
 				print_display(display_buffer);
 				break;
@@ -444,7 +466,7 @@ int main() {
 				break;
 		}
 
-		// std::this_thread::sleep_for(std::chrono::nanoseconds(NANOSECONDS_PER_FRAME));
+		std::this_thread::sleep_for(std::chrono::nanoseconds(NANOSECONDS_PER_FRAME));
 
 		
 	}

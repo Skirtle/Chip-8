@@ -50,6 +50,17 @@
 		"xutility": "cpp",
 		"bitset": "cpp",
 		"fstream": "cpp",
-		"vector": "cpp"
+		"vector": "cpp",
+		"algorithm": "cpp",
+		"chrono": "cpp",
+		"forward_list": "cpp",
+		"iomanip": "cpp",
+		"optional": "cpp",
+		"random": "cpp",
+		"ratio": "cpp",
+		"sstream": "cpp",
+		"stop_token": "cpp",
+		"string": "cpp",
+		"thread": "cpp"
 	}
 }
