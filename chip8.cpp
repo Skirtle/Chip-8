@@ -12,6 +12,8 @@ Source of information: https://en.wikipedia.org/wiki/CHIP-8#Memory, https://tobi
 #include <thread>
 #include <random>
 
+#include <cstdlib>
+
 #define MAX_MEMORY_BYTES 4096
 #define MAX_REGISTERS 16
 #define STACK_ADDRESS_COUNT 24
@@ -22,7 +24,7 @@ Source of information: https://en.wikipedia.org/wiki/CHIP-8#Memory, https://tobi
 #define WHITE "■"
 #define MAX_FILE_SIZE 3896
 #define DEBUG 0
-#define NANOSECONDS_PER_FRAME 1666666
+#define NANOSECONDS_PER_FRAME 1000000
 #define SPRITE_MEMORY_LOCATION (uint16_t) 0x050
 
 class Character {
@@ -315,6 +317,11 @@ void load_rom(std::string filename, uint8_t *memory) {
 }
 
 int main() {
+	int res = system("whereis wget");
+	if (!res) std::cout << "Success\n";
+	else return -1;
+
+
 	// Memory: 4096 bytes
 	uint8_t *memory_buffer = (uint8_t*) malloc(sizeof(uint8_t) * MAX_MEMORY_BYTES);
 	if (!memory_buffer) {
@@ -374,6 +381,7 @@ int main() {
 
 	
 	bool halt_flag = false;
+	bool key_pressed = false;
 	int PC = 0;
 	uint16_t I = 0x200; // Index register, Starting at 0x200, the first "available" memory space
 
@@ -387,13 +395,12 @@ int main() {
 		PC += 2;
 
 		// Decode
-		uint16_t NNN = instruction & 0x0FFF;
-		uint16_t NN = instruction & 0x00FF;
-		uint16_t N = instruction & 0x000F;
-		uint16_t X = (instruction & 0x0F00) >> 8;
-		uint16_t Y = (instruction & 0x00F0) >> 4;
+		uint16_t NNN = instruction & 0x0FFF; // Memory addressess
+		uint16_t NN = instruction & 0x00FF; // 8-bit number
+		uint16_t N = instruction & 0x000F; // 4-bit number
+		uint16_t X = (instruction & 0x0F00) >> 8; // Typically, a register
+		uint16_t Y = (instruction & 0x00F0) >> 4; // Typically, a register
 
-		bool key_pressed = false;
 		switch ((instruction & 0xF000) >> 12) {
 			case 0x0:
 				if (instruction == 0x00E0) { clear_screen(display_buffer); } // Clear the display
