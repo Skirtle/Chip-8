@@ -318,8 +318,10 @@ void load_rom(std::string filename, uint8_t *memory) {
 
 int main() {
 	int res = system("whereis wget");
-	if (!res) std::cout << "Success\n";
+	if (!res) std::cout << res << "\n";
+
 	else return -1;
+	return 1;
 
 
 	// Memory: 4096 bytes
